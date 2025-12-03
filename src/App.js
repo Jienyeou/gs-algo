@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 
 // ==========================================
-// 👇 CHANGE THIS TO YOUR EMAIL ADDRESS 👇
+// 👇 YOUR WEB3FORMS ACCESS KEY IS SET 👇
 // ==========================================
-const YOUR_EMAIL = "jienyeou@gmail.com";
+const ACCESS_KEY = "9e71b632-514a-46cd-8a17-1259bf338c4b";
 
 export default function App() {
   const [view, setView] = useState("landing"); // 'landing' | 'register' | 'success'
@@ -166,8 +166,8 @@ function LandingPage({ setView }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto">
             {[
               {
-                label: "Average Annual Return",
-                value: "82 %",
+                label: "CAGR (Annual)",
+                value: "+62%",
                 color: "text-emerald-400",
               },
               { label: "Profit Factor", value: "2.05", color: "text-blue-400" },
@@ -330,7 +330,7 @@ function LandingPage({ setView }) {
   );
 }
 
-// --- Registration Form (Email Submission) ---
+// --- Registration Form (Web3Forms Submission) ---
 function RegistrationForm({ setView }) {
   const [loading, setLoading] = useState(false);
   const [formDataState, setFormDataState] = useState({
@@ -381,14 +381,19 @@ function RegistrationForm({ setView }) {
     }
 
     try {
-      // Create FormData for FormSubmit
+      // Create FormData for Web3Forms
       const submissionData = new FormData();
+      submissionData.append("access_key", ACCESS_KEY); // Use Key
       submissionData.append("name", formDataState.fullName);
-      submissionData.append("email", formDataState.email); // Customer email
+      submissionData.append("email", formDataState.email);
       submissionData.append("phone", formDataState.phone);
       submissionData.append("capital", formDataState.capital);
+      submissionData.append(
+        "subject",
+        "New GS Algo Application: " + formDataState.fullName
+      );
 
-      // Append files
+      // Append files (Web3Forms handles these securely as links)
       if (formDataState.icFileFront)
         submissionData.append("IC_Front", formDataState.icFileFront);
       if (formDataState.icFileBack)
@@ -396,33 +401,22 @@ function RegistrationForm({ setView }) {
       if (formDataState.addressFile)
         submissionData.append("Address_Proof", formDataState.addressFile);
 
-      // Disable captcha
-      submissionData.append("_captcha", "false");
-      submissionData.append(
-        "_subject",
-        "New GS Algo Application: " + formDataState.fullName
-      );
-      submissionData.append("_template", "table");
-
-      // Send to FormSubmit
-      const response = await fetch(`https://formsubmit.co/ajax/${YOUR_EMAIL}`, {
+      const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         body: submissionData,
       });
 
       const result = await response.json();
 
-      if (result.success === "true" || response.ok) {
+      if (result.success) {
         setLoading(false);
         setView("success");
       } else {
-        throw new Error("Form submission failed");
+        throw new Error(result.message || "Form submission failed");
       }
     } catch (error) {
       console.error("Submission error:", error);
-      setErrors({
-        form: "Submission failed. Please check your internet or try again.",
-      });
+      setErrors({ form: "Submission failed. Please try again." });
       setLoading(false);
     }
   };
